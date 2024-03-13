@@ -15,45 +15,76 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
+
 let renderer, scene, camera, controls;
+
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas); 
 
+
 renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+
 scene = new THREE.Scene();
-scene.background = new THREE.Color( "rgb(157,119,110)");
+scene.background = new THREE.Color( "rgb(157, 119, 110)");
+
 
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(3,3,3);
 // camera.lookAt(0,0,0);
 
-controls = new OrbitControls(camera, canvas);
-// controls.enableRotate = false; horizontal & vertical rotation
-// controls.enableZoom
-// controls.enablePan
-
-// soft stopping
-controls.enableDamping = true;
-
-const directionalLight = new THREE.DirectionalLight(); 
-directionalLight.position.set(1,2,3);
-scene.add(directionalLight);
-
-const dirHelper = new THREE.DirectionalLightHelper(directionalLight);
-scene.add(dirHelper);
 
 const cube_geometry = new THREE.BoxGeometry(1,1,1);
-const material = new THREE.MeshPhongMaterial({color:"rgb(77,122,102)"});
+const material = new THREE.MeshPhongMaterial({color:"rgb(77, 122, 102)"});
 const cube = new THREE.Mesh(cube_geometry, material);
 scene.add(cube);
 
 
+controls = new OrbitControls(camera, canvas);
+// controls.enableRotate = false; horizontal & vertical rotation
+// controls.enableZoom
+// controls.enablePan
+// soft stopping
+controls.enableDamping = true;
 
-animate();
 
+// directional light
+const directionalLight = new THREE.DirectionalLight(); 
+directionalLight.position.set(2,2,2);
+scene.add(directionalLight);
+const dirHelper = new THREE.DirectionalLightHelper(directionalLight);
+// scene.add(dirHelper);
+
+
+// point light
+const pointLight = new THREE.PointLight();
+pointLight.position.set( -1, -1, -1 );
+scene.add( pointLight );
+const sphereSize = 1;
+const pointLightHelper = new THREE.PointLightHelper( pointLight, sphereSize );
+// scene.add( pointLightHelper );
+
+
+// ambient light
+const ambientLight = new THREE.AmbientLight({
+    color: 0xffffff,
+    intensity:0.1
+});
+// scene.add(ambientLight);
+
+
+// hemisphere light
+const hemisphereLight = new THREE.HemisphereLight({
+    groundColor: 0x000000,
+    skyColor: 0xffffff,
+    intensity:0.5
+
+});
+const helper = new THREE.HemisphereLightHelper( hemisphereLight, 5 );
+scene.add(hemisphereLight);
+scene.add( helper );
 
 function animate(){
 
@@ -67,4 +98,5 @@ function animate(){
 
 }
 
-init();
+
+animate();
