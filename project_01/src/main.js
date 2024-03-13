@@ -17,15 +17,15 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 let renderer, scene, camera, controls;
 
-    
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas); 
 
-renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 scene = new THREE.Scene();
-scene.background = new THREE.Color( "rgb(253, 251, 239)");
+scene.background = new THREE.Color( "rgb(157,119,110)");
+
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(3,3,3);
 // camera.lookAt(0,0,0);
@@ -38,13 +38,15 @@ controls = new OrbitControls(camera, canvas);
 // soft stopping
 controls.enableDamping = true;
 
+const directionalLight = new THREE.DirectionalLight(); 
+directionalLight.position.set(1,2,3);
+scene.add(directionalLight);
 
-const light = new THREE.DirectionalLight(); 
-light.position.set(1,2,3);
-scene.add(light);
+const dirHelper = new THREE.DirectionalLightHelper(directionalLight);
+scene.add(dirHelper);
 
 const cube_geometry = new THREE.BoxGeometry(1,1,1);
-const material = new THREE.MeshPhongMaterial({color:"rgb(11, 162, 154)"});
+const material = new THREE.MeshPhongMaterial({color:"rgb(77,122,102)"});
 const cube = new THREE.Mesh(cube_geometry, material);
 scene.add(cube);
 
