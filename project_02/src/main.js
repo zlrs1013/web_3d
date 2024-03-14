@@ -27,6 +27,7 @@ function init() {
 	scene.add(directionalLight);
 
 	directionalLight.castShadow = true;
+	// increase the resolution of the shadow map generated 
 	directionalLight.shadow.mapSize.width = 2048;
 	directionalLight.shadow.mapSize.height = 2048;
 	directionalLight.shadow.radius = 8;
@@ -44,6 +45,8 @@ function init() {
 
 		model.traverse((obj) => {
 			if (obj.isMesh) {
+				console.log(obj);
+
 				obj.castShadow = true;
 				obj.receiveShadow = true;
 				obj.material.metalness = 0;
