@@ -11,12 +11,11 @@ canvas.height = window.innerHeight;
 document.body.appendChild(canvas);
 
 function init() {
-	
 
 	scene = new THREE.Scene();
 
     const loader = new RGBELoader();
-	loader.load("/garden.hdr", function(texture) {
+	loader.load("./hdr/sky.hdr", function(texture) {
 		texture.mapping = THREE.EquirectangularReflectionMapping;
 		scene.background = texture;
 		scene.environment = texture;
@@ -40,6 +39,8 @@ function init() {
 		color: new THREE.Color("#ffffff"),
 		roughness: 0,
 		metalness: 1,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.1
 	});
 	const mesh = new THREE.Mesh(geometry, material);
 	scene.add(mesh);
@@ -71,10 +72,11 @@ function init() {
 	// scene.add(hemisphereLight);
 
 	const hemiHelper = new THREE.HemisphereLightHelper(hemisphereLight);
-	scene.add(hemiHelper);
+	// scene.add(hemiHelper);
 
 	const planeGeo = new THREE.PlaneGeometry(10, 10);
 	const plane = new THREE.Mesh(planeGeo, material);
+    plane.material.emissiveIntensity = 0;
 	plane.position.set(0, -1, 0);
 	plane.rotation.set(Math.PI * -0.5, 0, 0);
 	scene.add(plane);
