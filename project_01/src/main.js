@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-// import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
+import { DataTextureLoader } from "three";
 
 let renderer, scene, camera, controls;
 
@@ -10,19 +11,21 @@ canvas.height = window.innerHeight;
 document.body.appendChild(canvas);
 
 function init() {
-	renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-	renderer.shadowMap.enabled = true;
-	renderer.shadowMap.type = THREE.VSMShadowMap;
+	
 
 	scene = new THREE.Scene();
 
-	// const loader = new RGBELoader();
-	// loader.load("/hdr/sky.hdr", (texture) => {
-	// 	texture.mapping = THREE.EquirectangularReflectionMapping;
-	// 	scene.background = texture;
-	// 	scene.environment = texture;
-	// });
+    const loader = new RGBELoader();
+	loader.load("/garden.hdr", function(texture) {
+		texture.mapping = THREE.EquirectangularReflectionMapping;
+		scene.background = texture;
+		scene.environment = texture;
+	});
 
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.VSMShadowMap;
+    
 	camera = new THREE.PerspectiveCamera();
 	camera.fov = 32;
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -34,27 +37,32 @@ function init() {
 
 	const geometry = new THREE.SphereGeometry();
 	const material = new THREE.MeshStandardMaterial({
-		// color: new THREE.Color("#ffffff"),
-		// roughness: 0,
-		// metalness: 1,
-        color: 0xffffff
+		color: new THREE.Color("#ffffff"),
+		roughness: 0,
+		metalness: 1,
 	});
 	const mesh = new THREE.Mesh(geometry, material);
 	scene.add(mesh);
 
 	const directionalLight = new THREE.DirectionalLight(
 		new THREE.Color("white"),
-		1
+		0.75
 	);
 	directionalLight.position.set(2, 2, 2);
 	directionalLight.castShadow = true;
 	directionalLight.shadow.blurSamples = 30;
 	directionalLight.shadow.radius = 12;
-	scene.add(directionalLight);
+	// scene.add(directionalLight);
 
 	const dirHelper = new THREE.DirectionalLightHelper(directionalLight);
-	scene.add(dirHelper);
+	// scene.add(dirHelper);
 
+	const pointLight = new THREE.PointLight(0xffffff, 0.1);
+	pointLight.position.set(2, 0, 2);
+	// scene.add(pointLight);
+
+	const pointHelper = new THREE.PointLightHelper(pointLight);
+	// scene.add(pointHelper);
 
 	const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
 	// scene.add(ambientLight);
