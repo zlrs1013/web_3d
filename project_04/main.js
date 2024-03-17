@@ -42,7 +42,7 @@ function init() {
 
 	// light
 	const light = new THREE.DirectionalLight(0xffffff, 1);
-	light.position.set(-1, 1, 0.5);
+	light.position.set(-0.5, 0.5, 0.5);
 	light.castShadow = true;
 	light.shadow.camera.top = 180;
 	light.shadow.camera.bottom = -100;
@@ -66,6 +66,9 @@ function init() {
 	const loader = new GLTFLoader();
 	loader.load("/gltf/click.glb", function (gltf) {
 		const model = gltf.scene;
+
+        console.log(model);
+
 		model.position.set(0, 0, 0);
 		model.scale.set(0.1, 0.1, 0.1);
 		scene.add(model);
@@ -97,7 +100,7 @@ function init() {
 				const clip = clips.find(
 					(clip) => clip.name == track.name.split(".")[0]
 				);
-				// if clip is exist
+				// if clip exists
 				if (clip) {
 					clip.tracks.push(track);
 				} else {
@@ -140,11 +143,40 @@ function render() {
 	animate();
 }
 
-// type below
+
+const raycaster= new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+window.addEventListener("click", (event)=> {
+    
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    
+    raycaster.setFromCamera( mouse, camera );
+
+    const intersects = raycaster.intersectObjects( scene.children );
+
+    // console.log(intersects[0]);
+
+    if(intersects[0]) {
+        const buttonColor = intersects[0].object.material.color;
+        const rocketColor = scene.getObjectByName("change");
+        
+        const targetAnimation = actions[intersects[0].object.name];
+        if (targetAnimation) {
+            rocketColor.material.color = buttonColor;
+            scene.background = buttonColor;
+            targetAnimation.reset();
+            targetAnimation.play();
+        }
+    }
+
+});
+
+const clock = new THREE.Clock();
 
 function animate() {
-	// 02. animate
-
+    mixer.update(clock.getDelta());
     rocket.rotation.y += 0.01;
 }
 
