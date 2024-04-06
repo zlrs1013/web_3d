@@ -11,7 +11,6 @@ document.body.appendChild(canvas);
 
 let camera, scene, renderer, mixer, gltfObject;
 let rocket;
-let paintObject;
 let hemiLight;
 let actions = {};
 
