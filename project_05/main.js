@@ -10,181 +10,91 @@ document.body.appendChild(canvas);
 
 // initialize variables
 let camera, scene, renderer, controls;
-let hemiLight, dirLight;
+let model;
 
-let models = {};
+//colors
+const dark = new THREE.Color("hsl(280,100%,0%)");
+
+init();
 
 function init() {
-	camera = new THREE.PerspectiveCamera(
-		30,
-		window.innerWidth / window.innerHeight,
-		1,
-		2000
-	);
-	camera.position.set(0, 0, 100);
-	scene = new THREE.Scene();
 	renderer = new THREE.WebGLRenderer({
 		antialias: true,
 		canvas,
 	});
-	renderer.setPixelRatio(window.devicePixelRatio);
+	camera = new THREE.PerspectiveCamera(
+		30,
+		window.innerWidth / window.innerHeight,
+		1,
+		3000
+	);
+	camera.position.set(30, 0, 30);
+	scene = new THREE.Scene();
+	scene.background = dark;
+	scene.fog = new THREE.Fog(dark, 40, 80);
+
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.outputEncoding = THREE.sRGBEncoding;
-	renderer.shadowMap.enabled = true;
 
-	// large contrast renderer
-	renderer.toneMapping = THREE.ACESFilmicToneMapping;
-	renderer.toneMappingExposure = 1;
+	// attach camera to orbit controls
+	controls = new OrbitControls(camera, renderer.domElement);
+	controls.target.set(0, 0, 0);
+	controls.enableDamping = true;
 
-	controls = new OrbitControls(camera, canvas);
-	controls.enableRotate = false;
+	// controls distance is 50
+	controls.minDistance = 50;
+	controls.maxDistance = 50;
 
-	// keep window responsive
-	window.addEventListener("resize", onWindowResize);
+	// gltf load
+	let loader = new GLTFLoader();
 
-	// load gltf
-	const loader = new GLTFLoader();
-	loader.load("/gltf/clock.glb", function (gltf) {
-		const model = gltf.scene;
-		const ratio = 0.1;
-		model.position.set(0, 0, 0);
+	loader.load("/gltf/particle.glb", function (gltf) {
+		model = gltf.scene;
+		const ratio = 0.15;
 		model.scale.set(ratio, ratio, ratio);
+		model.position.set(0, -40, 0);
+		model.rotation.set(0, 0, 0);
 		scene.add(model);
 
-		// add hemisphere light
-
-		hemiLight = new THREE.HemisphereLight(0xffffff, 0x000000, 0.5);
-		hemiLight.position.set(0, 1, 0);
-		scene.add(hemiLight);
-
-		// add directional light
-		dirLight = new THREE.DirectionalLight(0xffffff, 1);
-		dirLight.position.set(0, 1, 1);
-
-		// shadow
-		dirLight.castShadow = true;
-		dirLight.shadow.mapSize.width = 2048;
-		dirLight.shadow.mapSize.height = 2048;
-		dirLight.shadow.camera.left = -100;
-		dirLight.shadow.camera.right = 100;
-		dirLight.shadow.camera.top = 100;
-		dirLight.shadow.camera.bottom = -100;
-		dirLight.shadow.radius = 2;
-
-		scene.add(dirLight);
-
-		// change child material
+		// change material
 		model.traverse(function (child) {
-			// model names
-			const modelNames = ["hour", "min", "sec", "orbit", "right", "left"];
-			// match model name
-			modelNames.forEach((name) => {
-				if (child.name.toLowerCase().includes(name)) {
-					models[name] = child;
-				}
-			});
-
 			if (child.isMesh) {
-				const originalMat = child.material;
-				child.material = new THREE.MeshPhysicalMaterial({
-					color: originalMat.color,
-					roughness: originalMat.roughness,
+				// physical material with bump map
+				let mat = new THREE.MeshPhysicalMaterial({
+					color: 0xffffff,
+					roughness: 0.8,
+					bumpMap: child.material.normalMap,
+					bumpScale: 0.1,
 				});
-				// cast shadow
-				child.castShadow = true;
-				child.receiveShadow = true;
-			}
-
-			// set default camera position and angle to gltf camera
-			if (child.name.toLowerCase().includes("camera")) {
-				// set camera position and multiply by ratio
-				camera.position.set(
-					child.position.x * ratio,
-					child.position.y * ratio,
-					child.position.z * ratio
-				);
-				camera.rotation.set(
-					child.rotation.x,
-					child.rotation.y,
-					child.rotation.z
-				);
+				child.material = mat;
 			}
 		});
-		
-		// Rotate();
+
 		render();
 	});
+	// add rim light
+	let rimLight = new THREE.DirectionalLight(0xffffff, 1);
+	rimLight.position.set(-0.1, 0, -1);
+	scene.add(rimLight);
+
+	// add point light
+	let pointLight = new THREE.PointLight("hsl(180,50%,60%)", 5, 50);
+	pointLight.position.set(0, 30, 0);
+	scene.add(pointLight);
+
+	// indirectional light
+	let directionalLight = new THREE.DirectionalLight("hsl(200,50%,50%)", 0.1);
+	directionalLight.position.set(-0.5, 1, 0);
+	scene.add(directionalLight);
 }
 
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-// type below
-// Adobe Color : https://color.adobe.com/ko/create/color-wheel
-
-const colors = {
-	day: {
-		sky: "hsl(45,100%,60%)",
-		ground: "hsl(10,100%,50%)",
-		background: "hsl(20,80%,10%)",
-	},
-	night: {
-		sky: "#ffffff",
-		ground: "hsl(180,80%,25%)",
-		background: "hsl(200,80%,15%)",
-	},
-};
-
-function setTime(){
-	const hour = scene.getObjectByName("hour");
-	const min = scene.getObjectByName("min");
-	const sec = scene.getObjectByName("sec");
-	const orbit = scene.getObjectByName("orbit");
-
-	const date = new Date();
-	const hourRate = date.getHours() / 12;
-	const minRate = date.getMinutes() / 60;
-	const secRate = date.getSeconds() / 60;
-
-	// console.log(date.getHours())
-
-	hour.rotation.z = - [Math.PI * 2] * hourRate;
-	min.rotation.z = - [Math.PI * 2] * minRate;
-	sec.rotation.z = - [Math.PI * 2] * secRate;
-	orbit.rotation.y = - [Math.PI * 2] * hourRate;
-
-	let currentSky, currentGround, currentBackground;
-	if (date.getHours() > 6 || date.getHours() < 18) { //day
-		currentSky = colors.day.sky;
-		currentGround = colors.day.ground;
-		currentBackground = colors.day.background;
-	} else { //night
-		currentSky = colors.night.sky;
-		currentGround = colors.night.ground;
-		currentBackground = colors.night.background;
-	}
-
-	scene.background = new THREE.Color(currentBackground);
-	hemiLight.color = new THREE.Color(currentSky);
-	hemiLight.color = new THREE.Color(currentGround);
-
-}
-
-function Rotate(){
-	scene.getObjectByName("sec").rotation.z = - (Math.PI / 180) * 155;
-	scene.getObjectByName("min").rotation.z = - (Math.PI / 180) * 90;
-	scene.getObjectByName("hour").rotation.z = - (Math.PI / 180) * 120;
-	scene.getObjectByName("orbit").rotation.y = - (Math.PI / 180) * 90;
-}
+//01. create Particle
 
 function render() {
-	setTime();
 	requestAnimationFrame(render);
 	controls.update();
+
+	//02. move particles
+
 	renderer.render(scene, camera);
 }
-
-init();
